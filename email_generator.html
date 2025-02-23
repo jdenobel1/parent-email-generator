@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Generator</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: black; color: #c5b358; }
+        label { font-weight: bold; display: block; margin-top: 10px; }
+        textarea, input { width: 100%; padding: 8px; margin-top: 5px; background: #222; color: #c5b358; border: 1px solid #c5b358; }
+        button { margin-top: 10px; padding: 10px; cursor: pointer; background: #c5b358; color: black; border: none; }
+        #outputEmail { height: 200px; }
+        .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; box-shadow: 0px 0px 10px gray; color: black; }
+        .modal button { display: block; margin: 10px auto 0; }
+	.checkbox-group {
+        display: flex;
+        gap: 20px; /* Space between checkbox-label pairs */
+    }
+
+    .checkbox-item {
+        display: flex;
+        align-items: center; /* Aligns checkbox and label properly */
+        gap: 5px; /* Space between checkbox and label */
+    }
+
+    </style>
+</head>
+<body>
+    <h2>Email Generator</h2>
+    <button onclick="showModal()">Email Generator Instructions</button>
+
+    <label for="teacherName">Teacher's Name:</label>
+    <input type="text" id="teacherName">
+
+    <label for="courseName">Course Name:</label>
+    <input type="text" id="courseName">
+
+  <label for="currentGrade">Current Grade (Current grade in the course is: ):</label>
+    <input type="text" id="currentGrade">
+    
+    <label for="parentName">Parent's Name (Hello [Parent's Name],):</label>
+    <input type="text" id="parentName">
+    
+    <label for="studentName">Student's Name (I wanted to provide an update regarding [Student's Name]'s progress in: ):</label>
+    <input type="text" id="studentName">
+    
+    <label for="assignments">Incomplete Assignments (Assignments [list] were marked as: ) - separate by commas:</label>
+    <input type="text" id="assignments">
+    
+    <label for="dueDates">Due Dates (These assignments were due on: ) - separate by commas:</label>
+    <input type="text" id="dueDates">
+    
+    
+<label for="assignmentStatus">Assignment Status:</label>
+<div class="checkbox-group">
+    <div class="checkbox-item">
+        <input type="checkbox" id="incomplete">
+        <label for="incomplete">Incomplete</label>
+    </div>
+    
+    <div class="checkbox-item">
+        <input type="checkbox" id="missing">
+        <label for="missing">Missing</label>
+    </div>
+    
+    <div class="checkbox-item">
+        <input type="checkbox" id="late">
+        <label for="late">Late</label>
+    </div>
+</div>
+
+
+
+    
+ <label for="latePolicy">Late Work Policy (Our department typically allows: ... after this period, late work is no longer accepted.):</label>
+    <textarea id="latePolicy"></textarea>
+    
+    <label for="unitInfo">Current Unit & Standards (We are currently working in: ):</label>
+    <textarea id="unitInfo"></textarea>
+    
+    <label for="unitTopics">Current Topics (which consists of: ) - separate by commas:</label>
+    <input type="text" id="unitTopics">
+    
+    <label for="recommendation">Recommendations for Student (I strongly recommend that [Student's Name] focus on: ):</label>
+    <textarea id="recommendation"></textarea>
+    
+    <label for="additionalMessage">Additional Message: (Add any additional message you'd like to include. The following phrase, "If you have any questions, please don't hesitate to contact me." will automatically be added.</label>
+    <textarea id="additionalMessage"></textarea>
+    
+    <button onclick="generateEmail()">Generate Email</button>
+    <button onclick="copyEmail()">Copy Email</button>
+    <button onclick="resetForm()">Reset</button>
+
+    <h3>Generated Email:</h3>
+    <textarea id="outputEmail" rows="10" readonly></textarea>
+    
+    <div id="modal" class="modal">
+        <h3>Email Generator Instructions</h3>
+	<h5>
+		<ol>
+			<li>Enter information for each text area</li>
+			<li>Press the Generator Email button | This will create a email that can be copied and sent to a parent | guardian.</li>
+			<li>When the Copy Email button is pressed, it will copy the displayed email to your clipboard and delete certain text areas to be 		            ready to generate another email for another student</li>
+			<li>Pressing the Reset button will delete all text box entries, to start over </li>
+		</ol>
+		<p>
+			Note: None of the information entered is stored anywhere. All Information is client-end, meaning nothing is stored on a server
+		</p><br>
+		<p>
+			By default this is the text that is automatically generated, where << >> will be replaced with the textbox entries: 
+			
+<p>Hello <<Parent_name>>, </p>
+
+<p>I wanted to provide an update regarding <<Student_name>>'s progress in <<Couse_name>>.</p>
+
+<p>Assignments: <<Incomplete Assignments>> were marked as <<Incomplete|Late|Missing>>.
+These assignments were due on <<Due_Date>> .
+</p>
+
+<p>
+Our department typically allows <<Late_work_policy>> after this period, late work is no longer accepted.
+</p>
+<p>
+We are currently working in <<Current_Unit>>, which consists of:<br>
+• <<Current_Topics>>
+<br>
+I strongly recommend that <<Student_Name>> focus on <<recommendation_for_student>>: 
+<br>
+<<Additional Message>>
+<p>
+If you have any questions, please don't hesitate to contact me.</p>
+
+<p>Sincerely,
+</p>
+			</p>
+		</p>
+	</h5>
+        <button onclick="closeModal()">Close</button>
+    </div>
+
+    <script>
+        function generateEmail() {
+            const teacherName = document.getElementById('teacherName').value;
+            const courseName = document.getElementById('courseName').value;
+            const parentName = document.getElementById('parentName').value;
+            const studentName = document.getElementById('studentName').value;
+            const assignments = document.getElementById('assignments').value;
+            const dueDates = document.getElementById('dueDates').value;
+            const latePolicy = document.getElementById('latePolicy').value;
+            const unitInfo = document.getElementById('unitInfo').value;
+            const unitTopics = document.getElementById('unitTopics').value.split(',').map(topic => `• ${topic.trim()}`).join('\n');
+            const recommendation = document.getElementById('recommendation').value;
+            const additionalMessage = document.getElementById('additionalMessage').value;
+            let assignmentStatus = [];
+            if (document.getElementById('incomplete').checked) assignmentStatus.push("Incomplete");
+            if (document.getElementById('missing').checked) assignmentStatus.push("Missing");
+            if (document.getElementById('late').checked) assignmentStatus.push("Late");
+            const statusText = assignmentStatus.length > 0 ? assignmentStatus.join(', ') : 'Incomplete';
+            const emailContent = `Hello ${parentName},\n\nI wanted to provide an update regarding ${studentName}'s progress in ${courseName}.\n\nAssignments: ${assignments} were marked as ${statusText}.\nThese assignments were due on ${dueDates}.\n\nOur department typically allows ${latePolicy} after this period, late work is no longer accepted.\n\nWe are currently working in ${unitInfo}, which consists of:\n${unitTopics}\n\nI strongly recommend that ${studentName} focus on: ${recommendation}\n\n${additionalMessage}\n\nIf you have any questions, please don't hesitate to contact me.\n\nSincerely,\n${teacherName}`;
+            document.getElementById('outputEmail').value = emailContent;
+        }
+
+        function copyEmail() {
+            const emailText = document.getElementById('outputEmail');
+            emailText.select();
+            document.execCommand('copy');
+            alert('Email copied to clipboard!');
+            ['currentGrade', 'parentName', 'studentName', 'assignments', 'dueDates', 'recommendation', 'additionalMessage'].forEach(id => document.getElementById(id).value = '');
+        }
+
+        function resetForm() {
+            document.querySelectorAll('input, textarea').forEach(el => el.value = '');
+            document.querySelectorAll('input[type=checkbox]').forEach(el => el.checked = false);
+        }
+
+        function showModal() { document.getElementById('modal').style.display = 'block'; }
+        function closeModal() { document.getElementById('modal').style.display = 'none'; }
+    </script>
+</body>
+</html>
